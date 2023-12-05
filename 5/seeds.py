@@ -1,15 +1,23 @@
 import re
 
 Line = tuple[int, int, int]
-Map = dict[int, int]
+Map = dict[int, dict[str, int]]
 
 
 def test_parse_input():
     seeds, maps = parse_input("example.txt")
     assert seeds == [79, 14, 55, 13]
-    assert maps[-1][93] == 56
-    assert maps[-2][69] == 0
-    assert maps[2][57] == 53
+    for test in [(-1, 93, 56), (-2, 69, 0), (2, 57, 53)]:
+        assert get_value_from_map(test[1], maps[test[0]]) == test[2]
+
+
+def get_value_from_map(x: int, map: Map) -> int:
+    for k in map.keys():
+        if x - k >= 0:
+            if x < k + map[k]["range"]:
+                return x + map[k]["delta"]
+
+    return x
 
 
 def test_location_from_seed():
@@ -17,46 +25,35 @@ def test_location_from_seed():
 
 
 def get_locations_from_file(filepath: str):
-    print("Parsing input...")
     seeds, maps = parse_input(filepath)
-    locations = []
-    for i, seed in enumerate(seeds):
-        print(f"Seed {i + 1}/{len(seeds)}...")
-        locations.append(get_locations_from_seeds(seed, maps))
-    return locations
+    return [get_locations_from_seeds(seed, maps) for seed in seeds]
 
 
 def get_locations_from_seeds(seed: int, maps: list[Map]):
     value = seed
     for map in maps:
-        value = map.get(value, value)
+        value = get_value_from_map(value, map)
     return value
 
 
 def parse_input(filepath: str) -> (list[int], list[Map]):
-    print("Reading file")
     lines = [l for l in open(filepath, "r")]
-
-    print("Reading seeds")
     seeds = [int(num) for num in re.findall(r"\d+", lines[0])]
 
-    print("Reading maps")
     maps = []
-    for j, line in enumerate(lines[1:]):
-        print(f"Line {j + 1}/{len(lines)}")
+    for line in lines[1:]:
         # We found a new map; append a new list
         if line.find("map") != -1:
             maps.append({})
 
         map_line = [int(num) for num in re.findall(r"\d+", line)]
         if len(map_line) > 0:
-            maps[-1].update({map_line[1] + i: map_line[0] + i for i in range(map_line[2])})
+            maps[-1][map_line[1]] = {"delta": map_line[0] - map_line[1], "range": map_line[2]}
 
     return seeds, maps
 
 
 if __name__ == "__main__":
-    print("part 1")
     print(min(get_locations_from_file("input.txt")))
 
 
