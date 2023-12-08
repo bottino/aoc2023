@@ -16,7 +16,7 @@ class Type(Enum):
     FIVE_OF_KIND = 6
 
 
-CARDS = [*[str(i) for i in range(2, 10)], "T", "J", "Q", "K", "A"]
+CARDS = ["J", *[str(i) for i in range(2, 10)], "T", "Q", "K", "A"]
 CARD_STRENGTH = {c: i for i, c in enumerate(CARDS)}
 
 
@@ -26,18 +26,21 @@ def test_parse_input():
 
 def test_get_hand_type():
     hands = parse_input("example.txt")
-    assert [get_hand_type(hand) for hand in hands] == [Type.ONE_PAIR, Type.THREE_OF_KIND, Type.TWO_PAIRS, Type.TWO_PAIRS, Type.THREE_OF_KIND]
+    assert [get_hand_type(hand) for hand in hands] == [Type.ONE_PAIR, Type.FOUR_OF_KIND, Type.TWO_PAIRS, Type.FOUR_OF_KIND, Type.FOUR_OF_KIND]
 
 
 def test_get_hand_type_all():
-    hands = ["JJJJJ", "JJTJJ", "23232", "2221T", "99242", "9TKJA", "AKAQJ"]
+    hands = ["JJJJJ", "JJTJJ", "23232", "2221T", "99242", "9TKJA", "AKAQJ", "23456"]
     hands = [Hand(h, 0) for h in hands]
     assert [get_hand_type(hand) for hand in hands] == [
-        Type.FIVE_OF_KIND, Type.FOUR_OF_KIND, Type.FULL_HOUSE, Type.THREE_OF_KIND, Type.TWO_PAIRS, Type.HIGH_CARD, Type.ONE_PAIR]
+        Type.FIVE_OF_KIND, Type.FIVE_OF_KIND,
+        Type.FULL_HOUSE, Type.THREE_OF_KIND,
+        Type.TWO_PAIRS, Type.ONE_PAIR,
+        Type.THREE_OF_KIND, Type.HIGH_CARD]
 
 
 def test_get_total_winnings():
-    assert get_total_winnings("input.txt") == 6440
+    assert get_total_winnings("example.txt") == 5905
 
 
 def test_input_same_hands():
@@ -48,11 +51,18 @@ def test_input_same_hands():
 
 
 def get_hand_type(hand: Hand) -> Type:
-    cards = [c for c in hand.cards]
-    cards.sort(reverse=True)
+    # Handle exception
+    if hand.cards == "JJJJJ":
+        return Type.FIVE_OF_KIND
+
+    cards = [c for c in hand.cards if c != "J"]
     card_nums = {c: 0 for c in cards}
     for c in cards:
         card_nums[c] += 1
+
+    num_jokers = sum([c == "J" for c in hand.cards])
+    most_frequent_card = sorted(card_nums.items(), key=lambda item: item[1], reverse=True)[0][0]
+    card_nums[most_frequent_card] += num_jokers
 
     if max(card_nums.values()) == 5:
         return Type.FIVE_OF_KIND
