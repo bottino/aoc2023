@@ -41,6 +41,7 @@ def test_find_line(line, expected):
 
 def get_calibration_for_line(line: str) -> int:
     spelled_out_pattern = r"|".join(number_dict.keys())
+    # matches = re.findall(r"\d", line)  # part1
     matches = re.findall(r"(?=(\d|" + spelled_out_pattern + r"))", line)  # find all values, each in a separate match
     matches = [number_dict.get(m, m) for m in matches]  # replace by dict value if exists (for text numbers)
     return 10 * int(matches[0]) + int(matches[-1])
