@@ -100,6 +100,8 @@ def parse_input(filepath: str) -> (list[Range], list[Map]):
 
 
 if __name__ == "__main__":
-    pass
+    seeds, maps = parse_input("input.txt")
+    locations = get_locations_ranges_from_seeds(seeds, maps)
+    print(min([l[0] for l in locations]))
 
 
